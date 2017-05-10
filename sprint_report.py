@@ -47,16 +47,19 @@ def do_report(args):
             if estimate is not None:
                 estimate_value = estimate.get('value')
                 pt_total += estimate_value
+            issue_owner = ''
+            if github_story_data['assignee'] is not None:
+                issue_owner = (github_story_data['assignee']['login'])
 
-            print ("%s %s %s %s") % (story['issue_number'], github_story_data['title'].encode('utf-8'), github_story_data['state'], estimate_value)
+            print ("%s %s %s %s %s") % (story['issue_number'], github_story_data['title'].encode('utf-8'), issue_owner, github_story_data['state'], estimate_value)
             if option_csv:
                 GITHUB_LINK='=HYPERLINK("https://github.com/openbmc/openbmc/issues/%s", "%s")' % (story['issue_number'], story['issue_number'])
-                csvout.writerow([GITHUB_LINK, github_story_data['title'].encode('utf-8'),  github_story_data['state'], estimate_value])
+                csvout.writerow([GITHUB_LINK, github_story_data['title'].encode('utf-8'), issue_owner, github_story_data['state'], estimate_value])
 
         print ("Total: %s") % pt_total
         if option_csv:
-            SUM = '=SUM(D1:D%s)' % len(zen_epic['issues'])
-            csvout.writerow(["----","Total","----",SUM])
+            SUM = '=SUM(E1:E%s)' % len(zen_epic['issues'])
+            csvout.writerow(["----","Total","----","----",SUM])
     else:
         print "ERROR: <%s> %s is NOT an epic" % ( issueNumber, github_data['title'])
 
