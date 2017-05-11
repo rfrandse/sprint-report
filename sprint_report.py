@@ -19,6 +19,7 @@ REPO_ID = '42542702'
 GITHUB_API_ISSUES = 'https://api.github.com/repos/openbmc/openbmc/issues/'
 
 option_csv = None
+option_pipe = None
 
 
 def do_report(args):
@@ -50,11 +51,19 @@ def do_report(args):
             issue_owner = ''
             if github_story_data['assignee'] is not None:
                 issue_owner = (github_story_data['assignee']['login'])
+                
+            pipeline_name = ''
+            if option_pipe:               
+                pipeline_state = story.get('pipeline')
+                if pipeline_state is not None:
+                    pipeline_name = pipeline_state['name']
+                if github_story_data['state'] == 'closed':
+                    pipeline_name = 'Closed'
 
-            print ("%s %s %s %s %s") % (story['issue_number'], github_story_data['title'].encode('utf-8'), issue_owner, github_story_data['state'], estimate_value)
+            print ("%s %s %s %s %s %s") % (story['issue_number'], github_story_data['title'].encode('utf-8'), issue_owner, github_story_data['state'], estimate_value, pipeline_name)
             if option_csv:
                 GITHUB_LINK='=HYPERLINK("https://github.com/openbmc/openbmc/issues/%s", "%s")' % (story['issue_number'], story['issue_number'])
-                csvout.writerow([GITHUB_LINK, github_story_data['title'].encode('utf-8'), issue_owner, github_story_data['state'], estimate_value])
+                csvout.writerow([GITHUB_LINK, github_story_data['title'].encode('utf-8'), issue_owner, github_story_data['state'], estimate_value, pipeline_name])
 
         print ("Total: %s") % pt_total
         if option_csv:
@@ -69,6 +78,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-e', help='Enter epic number', type=int)
 
 parser.add_argument('-csv', action='store_true',help='create csv file')
+parser.add_argument('-pipe', action='store_true',help='add pipeline information')
 
 subparsers = parser.add_subparsers()
 
@@ -88,6 +98,8 @@ if args.e is None:
     parser.print_help()
     sys.exit()
     
+if args.pipe:
+    option_pipe = 'True'
 
 if 'func' in args:
     args.func(args)
