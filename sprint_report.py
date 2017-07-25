@@ -118,7 +118,7 @@ def do_team_report(args):
             no_status_message = "No STATUS :interrobang:"
 
             if github_story_data['state'] == 'closed':
-                comment_message = "> :fireworks: -- Closed--\n"
+                comment_message = "> -- Closed-- :fireworks:\n"
                 no_status_message = ""
                 stat_message += ":fireworks:"
             elif github_story_data['comments'] > 0:
@@ -151,7 +151,7 @@ def do_team_report(args):
             message =  "*<https://github.com/openbmc/openbmc/issues/%s|#%s> %s* %s\n" % (
                     story['issue_number'], story['issue_number'], github_story_data['title'].encode('utf-8'),bug_icon)
             message += "owner:%s estimate:%s %s state:%s\n" % (issue_owner, estimate_value, phase_label, pipeline_name)
-            message += comment_messagell
+            message += comment_message
 
             owner_list.setdefault(issue_owner, []).append(message)            
             stat_list.setdefault(issue_owner, []).append(stat_message)
