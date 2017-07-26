@@ -44,14 +44,105 @@ if current_date.weekday() == 1:
     really_late = (dateutil.parser.parse(str(current_date + timedelta(days=-5)))).replace(tzinfo=pytz.UTC)
 if current_date.weekday() == 2:
     really_late = (dateutil.parser.parse(str(current_date + timedelta(days=-5)))).replace(tzinfo=pytz.UTC)
+squad_1 = 0
+squad_2 = 1
+squad_3 = 2
+squad_unknown = 3
+
+squad_list = [squad_1, squad_2, squad_3, squad_unknown]
+squad_message = [squad_1, squad_2, squad_3, squad_unknown]
 
 
+squad_list[squad_1] = [
+    '@dhruvaraj', 
+    '@dkodihal',    
+    '@devenrao',
+    '@ojayanth',
+    '@ratagupt',
+    '@tomjoseph',
+    '@vishwanath',
+    ]
+
+squad_list[squad_2] = [
+    '@v2cib530', 
+    '@cbostic',    
+    '@chinari',
+    '@andrewg',
+    '@eajames',
+    '@gmills',
+    '@msbarth',
+    '@spinler',
+    ]
+squad_list[squad_3] = [
+    '@anoo', 
+    '@bradleyb',    
+    '@charles.hofer',
+    '@lgonzalez',
+    '@mtritz',
+    '@khansa',
+    ]
+
+username_map = {
+    'adamliyi': "@shyili",
+    'amboar': "@arj",
+    'anoo1': "@anoo",
+    'bradbishop': "@bradleyb",
+    'bjwyman': "@v2cib530",
+    'cbostic': "@cbostic",
+    'charleshofer': "@charles.hofer",
+    'chinaridinesh': "@chinari",
+    'dhruvibm': "@dhruvaraj",
+    'dkodihal': "@dkodihal",
+    'devenrao': "@devenrao",
+    'geissonator': "@andrewg",
+    'eddiejames': "@eajames",
+    'gtmills': "@gmills",
+    'lgon':"@lgonzalez",
+    'mine260309': "@shyulei",
+    'msbarth': "@msbarth",
+    'mtritz': "@mtritz",
+    'ojayanth': "@ojayanth",
+    'ratagupt': "@ratagupt",
+    'saqibkh': "@khansa",
+    'shenki': "@jms",
+    'spinler': "@spinler",
+    'tomjoseph83': "@tomjoseph",
+    'vishwabmc': "@vishwanath",
+    'williamspatrick': "@iawillia",
+    'unknown': "unkown",
+}
 phase_list = ['Phase 3',
             'Phase 4',
             'Phase 5',
             'Phase 5.1',
             'Phase 6',
             'Phase 7']
+
+def map_username(user):
+    if username_map.get(user) is None:
+        return user
+    return username_map.get(user)
+
+def which_squad(name):
+    if name in squad_list[squad_1]:
+        squad = squad_1
+    elif name in squad_list[squad_2]:
+        squad = squad_2
+    elif name in squad_list[squad_3]:
+        squad = squad_3
+    else:
+        squad = squad_unknown
+    return squad
+
+def format_data(owner_name, payload_message):
+    msg = "\n********\n%s\n~~~~\n>>>" % owner_name
+    for data in payload_message:
+        msg += data
+        msg += "\n"
+    msg += "\n"
+    return msg
+
+
 
 def do_team_report(args):
     issueNumberList = []
@@ -93,6 +184,8 @@ def process_team_report(issueNumber):
             if github_story_data['assignee'] is not None:
                 issue_owner = (github_story_data['assignee']['login'])
 
+            slack_name = map_username(issue_owner)
+            print slack_name
 
             estimate = story.get('estimate')
             estimate_value = ''
@@ -115,7 +208,7 @@ def process_team_report(issueNumber):
 
             comment_message = ''
             stat_message = "*<https://github.com/openbmc/openbmc/issues/%s|#%s> estimate:%s owner:%s state:%s* " % (
-                    story['issue_number'], story['issue_number'], estimate_value,issue_owner, pipeline_name)
+                    story['issue_number'], story['issue_number'], estimate_value,slack_name, pipeline_name)
 
             no_status_message = "No STATUS :interrobang:"
 
@@ -152,11 +245,11 @@ def process_team_report(issueNumber):
             stat_message += phase_label
             message =  "*<https://github.com/openbmc/openbmc/issues/%s|#%s> %s* %s\n" % (
                     story['issue_number'], story['issue_number'], github_story_data['title'].encode('utf-8'),bug_icon)
-            message += "owner:%s estimate:%s %s state:%s\n" % (issue_owner, estimate_value, phase_label, pipeline_name)
+            message += "owner:%s estimate:%s %s state:%s\n" % (slack_name, estimate_value, phase_label, pipeline_name)
             message += comment_message
 
-            owner_list.setdefault(issue_owner, []).append(message)            
-            stat_list.setdefault(issue_owner, []).append(stat_message)
+            owner_list.setdefault(slack_name, []).append(message)            
+            stat_list.setdefault(slack_name, []).append(stat_message)
 
         slack_channel = '#openbmc_sprint_report'
         slack_channel = '@rfrandse'
@@ -164,27 +257,41 @@ def process_team_report(issueNumber):
 
 
         sorted_owner_list =  sorted(owner_list.items(), key=lambda x: (x[0],x[1]))
+        squad_message[squad_1] = "--- Squad 1 ---\n"
+        squad_message[squad_2] = "--- Squad 2 ---\n"
+        squad_message[squad_3] = "--- Squad 3 ---\n"
+        squad_message[squad_unknown] = "--- Everyone else ---\n"
 
-        for owner_name, payload_message in sorted_owner_list:
-            slack_message = "\n********\n%s\n~~~~\n>>>" % owner_name
-            for data in payload_message:
-                slack_message += data
-                slack_message + "\n"
-            slack_message += "\n"
-            slack.chat.post_message(slack_channel, slack_message)
+        # Due to indenting (>>>) problem need to send a new slack message per person
+        # if slack supports a solution to turn off indent this could be simplified
+        for squad in squad_list:
+            slack.chat.post_message(slack_channel, squad_message[squad_list.index(squad)])
+            for owner_name, payload_message in sorted_owner_list:
+                if squad_list.index(squad) == which_squad(owner_name):
+                    slack_message = format_data(owner_name, payload_message)
+                    slack.chat.post_message(slack_channel, slack_message)
 
         slack_message = "Status Key\n"
         slack_message +=":white_check_mark: = Update Status Current\n"
         slack_message += ":warning:= last updated 1 day\n"
         slack_message += ":fire::fire:= last updated 2 days\n"
         slack_message += ":fire::fire::fire: = updated 3+ days ago\n\n"
-            
-        sorted_stat_list =  sorted(stat_list.items(), key=lambda x: (x[0],x[1]))
-        for owner_name, payload_stat_message in sorted_stat_list:
-            for data in payload_stat_message:
-                slack_message += data
-                slack_message += "\n"
         slack.chat.post_message(slack_channel, slack_message)
+ 
+        sorted_stat_list =  sorted(stat_list.items(), key=lambda x: (x[0],x[1]))
+        squad_message[squad_1] = "--- Squad 1 ---\n"
+        squad_message[squad_2] = "--- Squad 2 ---\n"
+        squad_message[squad_3] = "--- Squad 3 ---\n"
+        squad_message[squad_unknown] = "--- Everyone else ---\n"
+
+        for owner_name, payload_stat_message in sorted_stat_list:
+            squad = which_squad(owner_name)
+            for data in payload_stat_message:
+                squad_message[squad] += data
+                squad_message[squad] += "\n"
+
+        for squad in squad_list:
+            slack.chat.post_message(slack_channel, squad_message[squad_list.index(squad)])
 
     else:
         print "ERROR: <%s> %s is NOT an epic" % ( issueNumber, github_data['title'])
