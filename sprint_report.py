@@ -53,12 +53,19 @@ phase_list = ['Phase 3',
             'Phase 6',
             'Phase 7']
 
-
 def do_team_report(args):
+    issueNumberList = []
+    if not isinstance(args.e, list):
+            issueNumberList.append(str(args.e))
+    else:
+        issueNumberList = args.e
+    for issueNumber in issueNumberList:
+        process_team_report(issueNumber)
+
+def process_team_report(issueNumber):
     owner_list = {}
     stat_list = {}
-
-    issueNumber = str(args.e)
+    
     issue_api_url = GITHUB_API_ISSUES + issueNumber
 
     github_data =  requests.get(issue_api_url, auth=GITHUB_AUTH).json()
@@ -66,14 +73,9 @@ def do_team_report(args):
     issue_zen_api_url = ZENHUB_API_ISSUES + issueNumber
     zenhub_data = requests.get(issue_zen_api_url, headers=config.zen_auth, verify=False).json()
 
-#    return
-#    print("team report:%s") % CTM
-#    print("----")
-#    print github_data['title']
     slack_message = ("team report:%s") % CTM
     slack_message += "\n----\n"
     slack_message += "_<https://github.com/openbmc/openbmc/issues/%s|#%s> %s_\n" % (issueNumber, issueNumber, github_data['title'])
-#    slack_message += github_data['title']
     slack_message += "\n"
 
 
@@ -268,9 +270,14 @@ if args.csv:
     csvout = csv.writer(open(csvfile, 'wb'))
     option_csv = 'True'
 
+
 if args.e is None:
-    parser.print_help()
-    sys.exit()
+    if hasattr(config, 'epic_list'):
+        args.e = config.epic_list
+    else:
+        parser.print_help()
+        sys.exit()
+
     
 if args.pipe:
     option_pipe = 'True'
