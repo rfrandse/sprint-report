@@ -164,6 +164,8 @@ def process_team_report(issueNumber):
     issue_zen_api_url = ZENHUB_API_ISSUES + issueNumber
     zenhub_data = requests.get(issue_zen_api_url, headers=config.zen_auth, verify=False).json()
 
+    print ("team report:%s") % CTM
+
     slack_message = ("team report:%s") % CTM
     slack_message += "\n----\n"
     slack_message += "_<https://github.com/openbmc/openbmc/issues/%s|#%s> %s_\n" % (issueNumber, issueNumber, github_data['title'])
@@ -185,7 +187,6 @@ def process_team_report(issueNumber):
                 issue_owner = (github_story_data['assignee']['login'])
 
             slack_name = map_username(issue_owner)
-            print slack_name
 
             estimate = story.get('estimate')
             estimate_value = ''
@@ -216,28 +217,49 @@ def process_team_report(issueNumber):
                 comment_message = "> -- Closed-- :fireworks:\n"
                 no_status_message = ""
                 stat_message += ":fireworks:"
-            elif github_story_data['comments'] > 0:
-                story_comments = requests.get(github_story_data['comments_url'], auth=GITHUB_AUTH).json()
+            else:
 
-                for comment in story_comments:                    
-                    if "**STATUS**" in comment['body']:
-                        no_status_message = ""
-                        comment_date = dateutil.parser.parse(comment['updated_at'])
+                if ((github_story_data['body'] is not None) and ("**STATUS**" in github_story_data['body'])):
+                    no_status_message = ""
+                    comment_date = dateutil.parser.parse(github_story_data['updated_at'])
 
-                        icon = ":fire::fire::fire:"
-                        if comment_date > day_late:
-                            icon =":white_check_mark:"
-                        elif comment_date > two_day_late:
-                            icon = ":warning:"
-                        elif comment_date > really_late:
-                            icon = ":fire::fire:"
+                    icon = ":fire::fire::fire:"
+                    if comment_date > day_late:
+                        icon =":white_check_mark:"
+                    elif comment_date > two_day_late:
+                        icon = ":warning:"
+                    elif comment_date > really_late:
+                        icon = ":fire::fire:"
 
 
-                        stat_message += icon
+                    stat_message += icon
 
-                        comment_message += "Last updated: %s %s\n"  % (comment['updated_at'], icon)
-                        comment_message += comment['body']
-                        comment_message += "\n\n\n"
+                    comment_message += "Last updated: %s %s\n"  % (github_story_data['updated_at'], icon)
+                    comment_message += github_story_data['body']
+                    comment_message += "\n\n\n"
+
+                if github_story_data['comments'] > 0:
+                    story_comments = requests.get(github_story_data['comments_url'], auth=GITHUB_AUTH).json()
+
+                    for comment in story_comments:                    
+                        if "**STATUS**" in comment['body']:
+                            no_status_message = ""
+                            comment_date = dateutil.parser.parse(comment['updated_at'])
+
+                            icon = ":fire::fire::fire:"
+                            if comment_date > day_late:
+                                icon =":white_check_mark:"
+                            elif comment_date > two_day_late:
+                                icon = ":warning:"
+                            elif comment_date > really_late:
+                                icon = ":fire::fire:"
+
+
+                            stat_message += icon
+
+                            comment_message += "Last updated: %s %s\n"  % (comment['updated_at'], icon)
+                            comment_message += comment['body']
+                            comment_message += "\n\n\n"
 
             comment_message += no_status_message
             comment_message += "\n"
