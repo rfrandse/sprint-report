@@ -160,7 +160,11 @@ def process_team_report(issueNumber):
     issue_api_url = GITHUB_API_ISSUES + issueNumber
 
     github_data =  requests.get(issue_api_url, auth=GITHUB_AUTH).json()
+    if github_data['state'] == 'closed':
+        print "<%s> %s is closed" % ( issueNumber, github_data['title'])
+        return
 
+ 
     issue_zen_api_url = ZENHUB_API_ISSUES + issueNumber
     zenhub_data = requests.get(issue_zen_api_url, headers=config.zen_auth, verify=False).json()
 
@@ -176,7 +180,6 @@ def process_team_report(issueNumber):
         issue_zen_api_epic_url = ZENHUB_API_EPICS + issueNumber
         zen_epic =  requests.get(issue_zen_api_epic_url, headers=config.zen_auth, verify=False).json()
 
-        pt_total = 0
         for story in zen_epic['issues']:
             print ("processing %s") % story['issue_number']
             issue_api_url = GITHUB_API_ISSUES + str(story['issue_number'])
