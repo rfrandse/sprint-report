@@ -28,22 +28,54 @@ GITHUB_API_ISSUES = 'https://api.github.com/repos/openbmc/openbmc/issues/'
 
 option_csv = None
 option_pipe = None
-#current_date = datetime.datetime.now()
 current_date = (datetime.datetime.now()).date()
 
-day_late =  (dateutil.parser.parse(str(current_date + timedelta(days=-1)))).replace(tzinfo=pytz.UTC)
-two_day_late = (dateutil.parser.parse(str(current_date + timedelta(days=-2)))).replace(tzinfo=pytz.UTC)
-really_late = (dateutil.parser.parse(str(current_date + timedelta(days=-3)))).replace(tzinfo=pytz.UTC)
+day_late = (
+        dateutil.parser.parse(
+            str(current_date + timedelta(days=-1)))).replace(tzinfo=pytz.UTC)
+two_day_late = (
+        dateutil.parser.parse(
+            str(current_date + timedelta(days=-2)))).replace(tzinfo=pytz.UTC)
+really_late = (
+        dateutil.parser.parse(
+            str(current_date + timedelta(days=-3)))).replace(tzinfo=pytz.UTC)
 
 if current_date.weekday() == 0:
-    day_late =  (dateutil.parser.parse(str(current_date + timedelta(days=-3)))).replace(tzinfo=pytz.UTC)
-    two_day_late = (dateutil.parser.parse(str(current_date + timedelta(days=-4)))).replace(tzinfo=pytz.UTC)
-    really_late = (dateutil.parser.parse(str(current_date + timedelta(days=-5)))).replace(tzinfo=pytz.UTC)
+    day_late = (
+            dateutil.parser.parse(
+                str(
+                    current_date +
+                    timedelta(days=-3)))).replace(tzinfo=pytz.UTC)
+    two_day_late = (
+            dateutil.parser.parse(
+                str(
+                    current_date +
+                    timedelta(days=-4)))).replace(tzinfo=pytz.UTC)
+    really_late = (
+            dateutil.parser.parse(
+                str(
+                    current_date +
+                    timedelta(days=-5)))).replace(tzinfo=pytz.UTC)
+
 if current_date.weekday() == 1:
-    two_day_late = (dateutil.parser.parse(str(current_date + timedelta(days=-4)))).replace(tzinfo=pytz.UTC)
-    really_late = (dateutil.parser.parse(str(current_date + timedelta(days=-5)))).replace(tzinfo=pytz.UTC)
+    two_day_late = (
+            dateutil.parser.parse(
+                str(
+                    current_date +
+                    timedelta(days=-4)))).replace(tzinfo=pytz.UTC)
+    really_late = (
+            dateutil.parser.parse(
+                str(
+                    current_date +
+                    timedelta(days=-5)))).replace(tzinfo=pytz.UTC)
+
 if current_date.weekday() == 2:
-    really_late = (dateutil.parser.parse(str(current_date + timedelta(days=-5)))).replace(tzinfo=pytz.UTC)
+    really_late = (
+            dateutil.parser.parse(
+                str(
+                    current_date +
+                    timedelta(days=-5)))).replace(tzinfo=pytz.UTC)
+
 squad_1 = 0
 squad_2 = 1
 squad_3 = 2
@@ -54,8 +86,8 @@ squad_message = [squad_1, squad_2, squad_3, squad_unknown]
 
 
 squad_list[squad_1] = [
-    '@dhruvaraj', 
-    '@dkodihal',    
+    '@dhruvaraj',
+    '@dkodihal',
     '@devenrao',
     '@ojayanth',
     '@ratagupt',
@@ -64,8 +96,8 @@ squad_list[squad_1] = [
     ]
 
 squad_list[squad_2] = [
-    '@v2cib530', 
-    '@cbostic',    
+    '@v2cib530',
+    '@cbostic',
     '@chinari',
     '@andrewg',
     '@eajames',
@@ -74,8 +106,8 @@ squad_list[squad_2] = [
     '@spinler',
     ]
 squad_list[squad_3] = [
-    '@anoo', 
-    '@bradleyb',    
+    '@anoo',
+    '@bradleyb',
     '@charles.hofer',
     '@lgonzalez',
     '@mtritz',
@@ -97,7 +129,7 @@ username_map = {
     'geissonator': "@andrewg",
     'eddiejames': "@eajames",
     'gtmills': "@gmills",
-    'lgon':"@lgonzalez",
+    'lgon': "@lgonzalez",
     'mine260309': "@shyulei",
     'msbarth': "@msbarth",
     'mtritz': "@mtritz",
@@ -111,17 +143,20 @@ username_map = {
     'williamspatrick': "@iawillia",
     'unknown': "unkown",
 }
-phase_list = ['Phase 3',
-            'Phase 4',
-            'Phase 5',
-            'Phase 5.1',
-            'Phase 6',
-            'Phase 7']
+phase_list = [
+    'Phase 3',
+    'Phase 4',
+    'Phase 5',
+    'Phase 5.1',
+    'Phase 6',
+    'Phase 7']
+
 
 def map_username(user):
     if username_map.get(user) is None:
         return user
     return username_map.get(user)
+
 
 def which_squad(name):
     if name in squad_list[squad_1]:
@@ -134,6 +169,7 @@ def which_squad(name):
         squad = squad_unknown
     return squad
 
+
 def format_data(owner_name, payload_message):
     msg = "\n********\n%s\n~~~~\n>>>" % owner_name
     for data in payload_message:
@@ -141,7 +177,6 @@ def format_data(owner_name, payload_message):
         msg += "\n"
     msg += "\n"
     return msg
-
 
 
 def do_team_report(args):
@@ -153,38 +188,43 @@ def do_team_report(args):
     for issueNumber in issueNumberList:
         process_team_report(issueNumber)
 
+
 def process_team_report(issueNumber):
     owner_list = {}
     stat_list = {}
-    
     issue_api_url = GITHUB_API_ISSUES + issueNumber
 
-    github_data =  requests.get(issue_api_url, auth=GITHUB_AUTH).json()
+    github_data = requests.get(issue_api_url, auth=GITHUB_AUTH).json()
     if github_data['state'] == 'closed':
-        print "<%s> %s is closed" % ( issueNumber, github_data['title'])
+        print "<%s> %s is closed" % (issueNumber, github_data['title'])
         return
 
- 
     issue_zen_api_url = ZENHUB_API_ISSUES + issueNumber
-    zenhub_data = requests.get(issue_zen_api_url, headers=config.zen_auth, verify=False).json()
+    zenhub_data = requests.get(
+            issue_zen_api_url, headers=config.zen_auth, verify=False).json()
 
     print ("team report:%s") % CTM
 
     slack_message = ("team report:%s") % CTM
     slack_message += "\n----\n"
-    slack_message += "_<https://github.com/openbmc/openbmc/issues/%s|#%s> %s_\n" % (issueNumber, issueNumber, github_data['title'])
+    slack_message += (
+            "_<https://github.com/openbmc/openbmc/issues/%s|#%s> %s_\n" %
+            (issueNumber, issueNumber, github_data['title']))
     slack_message += "\n"
-
 
     if zenhub_data['is_epic']:
         issue_zen_api_epic_url = ZENHUB_API_EPICS + issueNumber
-        zen_epic =  requests.get(issue_zen_api_epic_url, headers=config.zen_auth, verify=False).json()
+        zen_epic = requests.get(
+                issue_zen_api_epic_url,
+                headers=config.zen_auth,
+                verify=False).json()
 
         for story in zen_epic['issues']:
             print ("processing %s") % story['issue_number']
             issue_api_url = GITHUB_API_ISSUES + str(story['issue_number'])
-            github_story_data =  requests.get(issue_api_url, auth=GITHUB_AUTH).json()
-#            print json.dumps(github_story_data, indent=4)
+            github_story_data = requests.get(
+                    issue_api_url, auth=GITHUB_AUTH).json()
+            # print json.dumps(github_story_data, indent=4)
             issue_owner = 'unknown'
             if github_story_data['assignee'] is not None:
                 issue_owner = (github_story_data['assignee']['login'])
@@ -211,8 +251,14 @@ def process_team_report(issueNumber):
                     phase_label += label['name']
 
             comment_message = ''
-            stat_message = "*<https://github.com/openbmc/openbmc/issues/%s|#%s> estimate:%s owner:%s state:%s* " % (
-                    story['issue_number'], story['issue_number'], estimate_value,slack_name, pipeline_name)
+            stat_message = (
+                    "*<https://github.com/openbmc/openbmc/issues/%s|#%s> \
+                            estimate:%s owner:%s state:%s* " % (
+                                story['issue_number'],
+                                story['issue_number'],
+                                estimate_value,
+                                slack_name,
+                                pipeline_name))
 
             no_status_message = "No STATUS :interrobang:"
 
@@ -222,45 +268,53 @@ def process_team_report(issueNumber):
                 stat_message += ":fireworks:"
             else:
 
-                if ((github_story_data['body'] is not None) and ("**STATUS**" in github_story_data['body'])):
+                if ((github_story_data['body'] is not None) and
+                        ("**STATUS**" in github_story_data['body'])):
                     no_status_message = ""
-                    comment_date = dateutil.parser.parse(github_story_data['updated_at'])
+                    comment_date = dateutil.parser.parse(
+                            github_story_data['updated_at'])
 
                     icon = ":fire::fire::fire:"
+
                     if comment_date > day_late:
-                        icon =":white_check_mark:"
+                        icon = ":white_check_mark:"
                     elif comment_date > two_day_late:
                         icon = ":warning:"
                     elif comment_date > really_late:
                         icon = ":fire::fire:"
 
-
                     stat_message += icon
 
-                    comment_message += "Last updated: %s %s\n"  % (github_story_data['updated_at'], icon)
+                    comment_message += (
+                            "Last updated: %s %s\n" % (
+                                github_story_data['updated_at'], icon))
                     comment_message += github_story_data['body']
                     comment_message += "\n\n\n"
 
                 if github_story_data['comments'] > 0:
-                    story_comments = requests.get(github_story_data['comments_url'], auth=GITHUB_AUTH).json()
+                    story_comments = requests.get(
+                            github_story_data['comments_url'],
+                            auth=GITHUB_AUTH).json()
 
-                    for comment in story_comments:                    
+                    for comment in story_comments:
                         if "**STATUS**" in comment['body']:
                             no_status_message = ""
-                            comment_date = dateutil.parser.parse(comment['updated_at'])
+                            comment_date = dateutil.parser.parse(
+                                    comment['updated_at'])
 
                             icon = ":fire::fire::fire:"
                             if comment_date > day_late:
-                                icon =":white_check_mark:"
+                                icon = ":white_check_mark:"
                             elif comment_date > two_day_late:
                                 icon = ":warning:"
                             elif comment_date > really_late:
                                 icon = ":fire::fire:"
 
-
                             stat_message += icon
 
-                            comment_message += "Last updated: %s %s\n"  % (comment['updated_at'], icon)
+                            comment_message += (
+                                    "Last updated: %s %s\n" % (
+                                        comment['updated_at'], icon))
                             comment_message += comment['body']
                             comment_message += "\n\n\n"
 
@@ -268,42 +322,55 @@ def process_team_report(issueNumber):
             comment_message += "\n"
             stat_message += no_status_message
             stat_message += phase_label
-            message =  "*<https://github.com/openbmc/openbmc/issues/%s|#%s> %s* %s\n" % (
-                    story['issue_number'], story['issue_number'], github_story_data['title'].encode('utf-8'),bug_icon)
-            message += "owner:%s estimate:%s %s state:%s\n" % (slack_name, estimate_value, phase_label, pipeline_name)
+            message = (
+                    "*<https://github.com/openbmc/openbmc/issues/%s|#%s> \
+                            %s* %s\n" % (
+                                story['issue_number'],
+                                story['issue_number'],
+                                github_story_data['title'].encode('utf-8'),
+                                bug_icon))
+            message += (
+                    "owner:%s estimate:%s %s state:%s\n" % (
+                        slack_name,
+                        estimate_value,
+                        phase_label,
+                        pipeline_name))
             message += comment_message
 
-            owner_list.setdefault(slack_name, []).append(message)            
+            owner_list.setdefault(slack_name, []).append(message)
             stat_list.setdefault(slack_name, []).append(stat_message)
 
         slack_channel = '#openbmc_sprint_report'
         slack_channel = '@rfrandse'
         slack.chat.post_message(slack_channel, slack_message)
 
-
-        sorted_owner_list =  sorted(owner_list.items(), key=lambda x: (x[0],x[1]))
+        sorted_owner_list = sorted(
+                owner_list.items(), key=lambda x: (x[0], x[1]))
         squad_message[squad_1] = "--- Squad 1 ---\n"
         squad_message[squad_2] = "--- Squad 2 ---\n"
         squad_message[squad_3] = "--- Squad 3 ---\n"
         squad_message[squad_unknown] = "--- Everyone else ---\n"
 
-        # Due to indenting (>>>) problem need to send a new slack message per person
-        # if slack supports a solution to turn off indent this could be simplified
+        # Due to indenting (>>>) problem need to send a new slack message per
+        # person if slack supports a solution to turn off indent this could be
+        # simplified.
         for squad in squad_list:
-            slack.chat.post_message(slack_channel, squad_message[squad_list.index(squad)])
+            slack.chat.post_message(
+                    slack_channel, squad_message[squad_list.index(squad)])
             for owner_name, payload_message in sorted_owner_list:
                 if squad_list.index(squad) == which_squad(owner_name):
                     slack_message = format_data(owner_name, payload_message)
                     slack.chat.post_message(slack_channel, slack_message)
 
         slack_message = "Status Key\n"
-        slack_message +=":white_check_mark: = Update Status Current\n"
+        slack_message += ":white_check_mark: = Update Status Current\n"
         slack_message += ":warning:= last updated 1 day\n"
         slack_message += ":fire::fire:= last updated 2 days\n"
         slack_message += ":fire::fire::fire: = updated 3+ days ago\n\n"
         slack.chat.post_message(slack_channel, slack_message)
- 
-        sorted_stat_list =  sorted(stat_list.items(), key=lambda x: (x[0],x[1]))
+
+        sorted_stat_list = sorted(
+                stat_list.items(), key=lambda x: (x[0], x[1]))
         squad_message[squad_1] = "--- Squad 1 ---\n"
         squad_message[squad_2] = "--- Squad 2 ---\n"
         squad_message[squad_3] = "--- Squad 3 ---\n"
@@ -316,33 +383,39 @@ def process_team_report(issueNumber):
                 squad_message[squad] += "\n"
 
         for squad in squad_list:
-            slack.chat.post_message(slack_channel, squad_message[squad_list.index(squad)])
+            slack.chat.post_message(
+                    slack_channel, squad_message[squad_list.index(squad)])
 
     else:
-        print "ERROR: <%s> %s is NOT an epic" % ( issueNumber, github_data['title'])
-
+        print "ERROR: <%s> %s is NOT an epic" % (
+                issueNumber, github_data['title'])
 
 
 def do_epic_report(args):
     issueNumber = str(args.e)
     issue_api_url = GITHUB_API_ISSUES + issueNumber
 
-    github_data =  requests.get(issue_api_url, auth=GITHUB_AUTH).json()
+    github_data = requests.get(issue_api_url, auth=GITHUB_AUTH).json()
 
     issue_zen_api_url = ZENHUB_API_ISSUES + issueNumber
-    zenhub_data = requests.get(issue_zen_api_url, headers=config.zen_auth, verify=False).json()
+    zenhub_data = requests.get(
+            issue_zen_api_url, headers=config.zen_auth, verify=False).json()
 
     print("epic report:%s") % CTM
     print("----")
     print github_data['title']
     if zenhub_data['is_epic']:
         issue_zen_api_epic_url = ZENHUB_API_EPICS + issueNumber
-        zen_epic =  requests.get(issue_zen_api_epic_url, headers=config.zen_auth, verify=False).json()
+        zen_epic = requests.get(
+                issue_zen_api_epic_url,
+                headers=config.zen_auth,
+                verify=False).json()
 
         pt_total = 0
         for story in zen_epic['issues']:
             issue_api_url = GITHUB_API_ISSUES + str(story['issue_number'])
-            github_story_data =  requests.get(issue_api_url, auth=GITHUB_AUTH).json()
+            github_story_data = requests.get(
+                    issue_api_url, auth=GITHUB_AUTH).json()
 
             estimate = story.get('estimate')
             estimate_value = ''
@@ -353,38 +426,53 @@ def do_epic_report(args):
             if github_story_data['assignee'] is not None:
                 issue_owner = (github_story_data['assignee']['login'])
 
-                
             pipeline_name = ''
-            if option_pipe:               
+            if option_pipe:
                 pipeline_state = story.get('pipeline')
                 if pipeline_state is not None:
                     pipeline_name = pipeline_state['name']
                 if github_story_data['state'] == 'closed':
                     pipeline_name = 'Closed'
 
-            print ("%s %s %s %s %s %s") % (story['issue_number'], github_story_data['title'].encode('utf-8'), issue_owner, github_story_data['state'], estimate_value, pipeline_name)
+            print ("%s %s %s %s %s %s") % (
+                    story['issue_number'],
+                    github_story_data['title'].encode('utf-8'),
+                    issue_owner,
+                    github_story_data['state'],
+                    estimate_value,
+                    pipeline_name)
             if option_csv:
-                GITHUB_LINK='=HYPERLINK("https://github.com/openbmc/openbmc/issues/%s", "%s")' % (story['issue_number'], story['issue_number'])
-                csvout.writerow([GITHUB_LINK, github_story_data['title'].encode('utf-8'), issue_owner, github_story_data['state'], estimate_value, pipeline_name])
+                GITHUB_LINK = (
+                        '=HYPERLINK("https://github.com/openbmc/\
+                        openbmc/issues/%s", "%s")' % (
+                            story['issue_number'], story['issue_number']))
+                csvout.writerow([
+                    GITHUB_LINK,
+                    github_story_data['title'].encode('utf-8'),
+                    issue_owner,
+                    github_story_data['state'],
+                    estimate_value,
+                    pipeline_name])
 
         print ("Total: %s") % pt_total
         if option_csv:
             SUM = '=SUM(E1:E%s)' % len(zen_epic['issues'])
-            csvout.writerow(["----","Total","----","----",SUM])
+            csvout.writerow(["----", "Total", "----", "----", SUM])
     else:
-        print "ERROR: <%s> %s is NOT an epic" % ( issueNumber, github_data['title'])
-
+        print "ERROR: <%s> %s is NOT an epic" % (
+                issueNumber, github_data['title'])
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-e', help='Enter epic number', type=int)
 
-parser.add_argument('-csv', action='store_true',help='create csv file')
-parser.add_argument('-pipe', action='store_true',help='add pipeline information')
+parser.add_argument('-csv', action='store_true', help='create csv file')
+parser.add_argument(
+    '-pipe',
+    action='store_true',
+    help='add pipeline information')
 
 subparsers = parser.add_subparsers()
-
-
 
 report_epic = subparsers.add_parser('report', help='Generate report')
 report_epic.set_defaults(func=do_epic_report)
@@ -396,7 +484,7 @@ args = parser.parse_args()
 
 print args
 
-CTM =  (datetime.datetime.now().strftime("%y-%m-%d-%H%M%S"))
+CTM = (datetime.datetime.now().strftime("%y-%m-%d-%H%M%S"))
 if args.csv:
     csvfile = 'epic-%s-issue-list-%s.csv' % (str(args.e), CTM)
     csvout = csv.writer(open(csvfile, 'wb'))
@@ -410,7 +498,6 @@ if args.e is None:
         parser.print_help()
         sys.exit()
 
-    
 if args.pipe:
     option_pipe = 'True'
 
